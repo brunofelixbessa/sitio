@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Instagram, Users, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { ShareGuestList } from './ShareGuestList';
 
 interface Guest {
   id: string;
@@ -16,9 +17,10 @@ interface Guest {
 interface GuestSectionProps {
   dynamicGuests?: Guest[];
   onGuestRemoved?: (guestId: string) => void;
+  onGuestsImported?: (guests: Guest[]) => void;
 }
 
-export function GuestSection({ dynamicGuests = [], onGuestRemoved }: GuestSectionProps) {
+export function GuestSection({ dynamicGuests = [], onGuestRemoved, onGuestsImported }: GuestSectionProps) {
   // Usar apenas convidados dinâmicos (reais)
   const allGuests = dynamicGuests;
 
@@ -111,7 +113,11 @@ export function GuestSection({ dynamicGuests = [], onGuestRemoved }: GuestSectio
 
 
 
-        {/* Contact for Guest List */}
+        {/* Share Guest List */}
+        <ShareGuestList 
+          guests={allGuests} 
+          onGuestsImported={onGuestsImported || (() => {})} 
+        />
 
       </div>
     </section>

@@ -51,6 +51,10 @@ export default function Index() {
     });
   };
 
+  const handleGuestsImported = (importedGuests: Guest[]) => {
+    setDynamicGuests(importedGuests);
+  };
+
   // Show loading state while data is being loaded
   if (!isLoaded) {
     return (
@@ -78,7 +82,11 @@ export default function Index() {
       <ConfirmPresence onGuestAdded={handleGuestAdded} />
       
       {/* Guest Section */}
-      <GuestSection dynamicGuests={dynamicGuests} onGuestRemoved={handleGuestRemoved} />
+      <GuestSection 
+        dynamicGuests={dynamicGuests} 
+        onGuestRemoved={handleGuestRemoved} 
+        onGuestsImported={handleGuestsImported}
+      />
       
       {/* Toast Notifications */}
       <Toaster position="top-right" richColors />
