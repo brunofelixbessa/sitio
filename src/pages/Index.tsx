@@ -4,8 +4,10 @@ import { VenueGallery } from '@/components/VenueGallery';
 import { EventInfo } from '@/components/EventInfo';
 import { GuestSection } from '@/components/GuestSection';
 import { ConfirmPresence } from '@/components/ConfirmPresence';
-import { Toaster } from 'sonner';
+import { Toaster, toast } from 'sonner';
 import { loadGuestsFromStorage, saveGuestsToStorage, isStorageAvailable, initializeEmptyGuestList } from '@/utils/storageUtils';
+import { syncLocalGuestsWithBaserow, fetchAllGuests } from '@/services/baserowGuestService';
+import { isBaserowConfigured } from '@/lib/baserow';
 
 interface Guest {
   id: string;
@@ -21,13 +23,43 @@ export default function Index() {
   const [dynamicGuests, setDynamicGuests] = useState<Guest[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load existing guests from localStorage on component mount
+  // Load existing guests from localStorage and Baserow on component mount
   useEffect(() => {
-    if (isStorageAvailable()) {
-      const existingGuests = loadGuestsFromStorage();
-      setDynamicGuests(existingGuests);
-    }
-    setIsLoaded(true);
+    const loadGuests = async () => {
+      // Primeiro carrega do localStorage
+      if (isStorageAvailable()) {
+        const existingGuests = loadGuestsFromStorage();
+        setDynamicGuests(existingGuests);
+        
+        // Verifica se o Baserow está configurado
+        if (isBaserowConfigured()) {
+          try {
+            // Sincroniza convidados locais com o Baserow
+            await syncLocalGuestsWithBaserow(existingGuests);
+            
+            // Carrega convidados do Baserow (que agora inclui os locais sincronizados)
+            const baserowGuests = await fetchAllGuests();
+            
+            // Converte para o formato Guest com IDs
+            const guestsWithIds = baserowGuests.map(guest => ({
+              ...guest,
+              id: guest.name, // Usar o nome como ID para simplificar
+              username: guest.socialLink.startsWith('@') ? guest.socialLink.substring(1) : guest.socialLink,
+              confirmed: true
+            }));
+            
+            // Atualiza a lista de convidados
+            setDynamicGuests(guestsWithIds);
+          } catch (error) {
+            console.error('Erro ao sincronizar com Baserow:', error);
+            toast.error('Não foi possível sincronizar com o servidor. Usando dados locais.');
+          }
+        }
+      }
+      setIsLoaded(true);
+    };
+    
+    loadGuests();
   }, []);
 
   // Save guests to localStorage whenever dynamicGuests changes

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { UserPlus, Instagram, Facebook, Twitter } from 'lucide-react';
 import { toast } from 'sonner';
 import { processSocialInput, processSocialInputAsync, type SocialProfile } from '@/utils/socialUtils';
+import { addGuestToBaserow } from '@/services/baserowGuestService';
+import { isBaserowConfigured } from '@/lib/baserow';
 
 interface Guest {
   id: string;
@@ -24,6 +26,12 @@ export function ConfirmPresence({ onGuestAdded }: ConfirmPresenceProps) {
   const [name, setName] = useState('');
   const [socialLink, setSocialLink] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [baserowEnabled, setBaserowEnabled] = useState(false);
+  
+  // Verificar se o Baserow está configurado
+  useEffect(() => {
+    setBaserowEnabled(isBaserowConfigured());
+  }, []);
 
   const detectSocialPlatform = (url: string): string => {
     if (url.includes('instagram.com') || url.includes('instagram')) return 'Instagram';
@@ -87,6 +95,26 @@ export function ConfirmPresence({ onGuestAdded }: ConfirmPresenceProps) {
         confirmed: true
       };
       
+      // Adicionar ao Baserow se estiver configurado
+      if (baserowEnabled) {
+        try {
+          const success = await addGuestToBaserow({
+            name: newGuest.name,
+            socialLink: newGuest.socialLink,
+            platform: newGuest.platform,
+            profileImage: socialProfile.profileImage || ''
+          });
+          
+          if (!success) {
+            toast.warning('Não foi possível salvar no servidor, mas seu nome foi adicionado localmente.');
+          }
+        } catch (error) {
+          console.error('Erro ao adicionar convidado ao Baserow:', error);
+          toast.warning('Não foi possível salvar no servidor, mas seu nome foi adicionado localmente.');
+        }
+      }
+      
+      // Adicionar localmente
       onGuestAdded(newGuest);
       
       // Reset form

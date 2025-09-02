@@ -1,8 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Instagram, Users, Trash2 } from 'lucide-react';
+import { Instagram, Users, Trash2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { useEffect, useState } from 'react';
+import { fetchAllGuests, removeGuestFromBaserow } from '@/services/baserowGuestService';
+import { isBaserowConfigured } from '@/lib/baserow';
 import { ShareGuestList } from './ShareGuestList';
 
 interface Guest {
@@ -18,11 +21,78 @@ interface GuestSectionProps {
   dynamicGuests?: Guest[];
   onGuestRemoved?: (guestId: string) => void;
   onGuestsImported?: (guests: Guest[]) => void;
+  useBaserow?: boolean;
 }
 
-export function GuestSection({ dynamicGuests = [], onGuestRemoved, onGuestsImported }: GuestSectionProps) {
-  // Usar apenas convidados dinâmicos (reais)
-  const allGuests = dynamicGuests;
+export function GuestSection({ dynamicGuests = [], onGuestRemoved, onGuestsImported, useBaserow = true }: GuestSectionProps) {
+  const [baserowGuests, setBaserowGuests] = useState<Guest[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [baserowEnabled, setBaserowEnabled] = useState(false);
+  
+  // Verificar se o Baserow está configurado
+  useEffect(() => {
+    setBaserowEnabled(isBaserowConfigured() && useBaserow);
+  }, [useBaserow]);
+  
+  // Carregar convidados do Baserow
+  const loadBaserowGuests = async () => {
+    if (!baserowEnabled) return;
+    
+    setIsLoading(true);
+    try {
+      const guests = await fetchAllGuests();
+      // Converter para o formato Guest com IDs
+      const guestsWithIds = guests.map(guest => ({
+        ...guest,
+        id: guest.name, // Usar o nome como ID para simplificar
+        username: guest.socialLink.startsWith('@') ? guest.socialLink.substring(1) : guest.socialLink,
+        confirmed: true
+      }));
+      setBaserowGuests(guestsWithIds);
+      
+      // Se onGuestsImported estiver disponível, atualizar também o estado local
+      if (onGuestsImported) {
+        onGuestsImported(guestsWithIds);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar convidados do Baserow:', error);
+      toast.error('Não foi possível carregar a lista de convidados do servidor.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Carregar convidados do Baserow ao montar o componente
+  useEffect(() => {
+    if (baserowEnabled) {
+      loadBaserowGuests();
+    }
+  }, [baserowEnabled]);
+  
+  // Função para remover convidado do Baserow
+  const handleRemoveFromBaserow = async (guestName: string, guestId: string) => {
+    if (!baserowEnabled) return false;
+    
+    try {
+      const success = await removeGuestFromBaserow(guestName);
+      if (success) {
+        // Atualizar estado local
+        setBaserowGuests(prev => prev.filter(g => g.name !== guestName));
+        // Chamar callback se disponível
+        if (onGuestRemoved) {
+          onGuestRemoved(guestId);
+        }
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Erro ao remover convidado do Baserow:', error);
+      return false;
+    }
+  };
+  
+  // Usar convidados do Baserow se disponíveis, caso contrário usar convidados locais
+  const allGuests = baserowEnabled ? baserowGuests : dynamicGuests;
 
   return (
     <section className="py-20 bg-gradient-to-b from-purple-50 to-pink-50">
@@ -50,10 +120,25 @@ export function GuestSection({ dynamicGuests = [], onGuestRemoved, onGuestsImpor
         {/* Confirmed Guests */}
         <Card className="bg-white/80 backdrop-blur-sm border-green-200 shadow-lg mb-12">
           <CardHeader>
-            <CardTitle className="text-2xl text-center text-green-600 flex items-center justify-center space-x-2">
-              <Users className="w-6 h-6" />
-              <span>Confirmados ✅</span>
-            </CardTitle>
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-2xl text-center text-green-600 flex items-center justify-center space-x-2">
+                <Users className="w-6 h-6" />
+                <span>Confirmados ✅</span>
+              </CardTitle>
+              
+              {baserowEnabled && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={loadBaserowGuests}
+                  disabled={isLoading}
+                  className="flex items-center space-x-1"
+                >
+                  <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                  <span>Atualizar</span>
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
@@ -64,10 +149,19 @@ export function GuestSection({ dynamicGuests = [], onGuestRemoved, onGuestsImpor
                       variant="ghost"
                       size="sm"
                       className="absolute top-2 right-2 w-6 h-6 p-0 text-red-400 hover:text-red-600 hover:bg-red-50 opacity-60 hover:opacity-100 transition-all"
-                      onClick={() => {
+                      onClick={async () => {
                         if (window.confirm(`Tem certeza que deseja remover ${guest.name} da lista de convidados?`)) {
-                          onGuestRemoved(guest.id);
-                          toast.success(`${guest.name} foi removido da lista de convidados.`);
+                          if (baserowEnabled) {
+                            const success = await handleRemoveFromBaserow(guest.name, guest.id);
+                            if (success) {
+                              toast.success(`${guest.name} foi removido da lista de convidados.`);
+                            } else {
+                              toast.error(`Erro ao remover ${guest.name}. Tente novamente.`);
+                            }
+                          } else if (onGuestRemoved) {
+                            onGuestRemoved(guest.id);
+                            toast.success(`${guest.name} foi removido da lista de convidados.`);
+                          }
                         }
                       }}
                     >
@@ -113,11 +207,23 @@ export function GuestSection({ dynamicGuests = [], onGuestRemoved, onGuestsImpor
 
 
 
-        {/* Share Guest List */}
-        <ShareGuestList 
-          guests={allGuests} 
-          onGuestsImported={onGuestsImported || (() => {})} 
-        />
+        {/* Mostrar ShareGuestList apenas se Baserow não estiver configurado */}
+        {!baserowEnabled && (
+          <ShareGuestList 
+            guests={allGuests} 
+            onGuestsImported={onGuestsImported || (() => {})} 
+          />
+        )}
+        
+        {/* Mensagem informativa sobre Baserow */}
+        {baserowEnabled && (
+          <div className="text-center mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <p className="text-blue-700">
+              A lista de convidados está sendo compartilhada automaticamente através do Baserow.
+              Não é necessário importar ou exportar manualmente.
+            </p>
+          </div>
+        )}
 
       </div>
     </section>
