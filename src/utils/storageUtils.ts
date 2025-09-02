@@ -8,6 +8,7 @@ export interface Guest {
   platform: string;
   profileImageUrl?: string;
   confirmed: boolean;
+  pago?: boolean;
 }
 
 const STORAGE_KEY = 'halloween-guests';

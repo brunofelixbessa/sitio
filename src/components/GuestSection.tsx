@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Instagram, Users, Trash2, RefreshCw } from 'lucide-react';
+import { Instagram, Users, Trash2, RefreshCw, DollarSign, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { useEffect, useState } from 'react';
 import { fetchAllGuests, removeGuestFromBaserow } from '@/services/baserowGuestService';
@@ -15,6 +15,7 @@ interface Guest {
   username: string;
   platform: string;
   confirmed: boolean;
+  pago?: boolean;
 }
 
 interface GuestSectionProps {
@@ -135,8 +136,20 @@ export function GuestSection({ dynamicGuests = [], onGuestRemoved, onGuestsImpor
                       <Trash2 className="w-3 h-3" />
                     </Button>
                   )}
-                  <div className="w-20 h-20 mx-auto mb-3 bg-green-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                  <div className="w-20 h-20 mx-auto mb-3 bg-green-500 rounded-full flex items-center justify-center text-white text-2xl font-bold relative">
                     {guest.name.split(' ').map(n => n[0]).join('')}
+                    {/* Ícone de status de pagamento */}
+                    <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs">
+                      {guest.pago ? (
+                        <div className="bg-green-600 w-6 h-6 rounded-full flex items-center justify-center" title="Pagamento confirmado">
+                          <DollarSign className="w-3 h-3" />
+                        </div>
+                      ) : (
+                        <div className="bg-orange-500 w-6 h-6 rounded-full flex items-center justify-center" title="Aguardando pagamento">
+                          <Clock className="w-3 h-3" />
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <h4 className="text-gray-800 font-semibold mb-1">{guest.name}</h4>
                   <div className="flex items-center justify-center space-x-1 text-sm text-green-600 cursor-pointer hover:text-green-800"

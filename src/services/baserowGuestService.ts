@@ -8,15 +8,20 @@ interface BaserowGuest {
   socialLink: string;
   platform: string;
   profileImage: string;
+  pago?: boolean;
 }
 
 // Convert Baserow guest record to local Guest format
 function convertBaserowToGuest(baserowGuest: BaserowGuest): Guest {
   return {
+    id: baserowGuest.id.toString(),
     name: baserowGuest.name,
     socialLink: baserowGuest.socialLink,
+    username: baserowGuest.socialLink.replace('@', ''),
     platform: baserowGuest.platform,
-    profileImage: baserowGuest.profileImage,
+    profileImageUrl: baserowGuest.profileImage,
+    confirmed: true, // Guests in Baserow are considered confirmed
+    pago: baserowGuest.pago || false,
   };
 }
 
@@ -26,7 +31,8 @@ function convertGuestToBaserow(guest: Guest): Omit<BaserowGuest, 'id'> {
     name: guest.name,
     socialLink: guest.socialLink,
     platform: guest.platform,
-    profileImage: guest.profileImage,
+    profileImage: guest.profileImageUrl || '',
+    pago: guest.pago || false,
   };
 }
 
