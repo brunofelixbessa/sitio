@@ -62,40 +62,83 @@ export function detectPlatform(input: string): string {
 
 /**
  * Attempt to get real Instagram profile image
- * Uses Instagram's public endpoints when possible
+ * Uses web scraping to extract profile image from Instagram page
  */
 export async function getRealInstagramProfileImage(username: string): Promise<string> {
   const cleanUsername = username.replace('@', '');
   
   try {
-    // Method 1: Try to fetch from Instagram's public API endpoint
+    // Method 1: Scrape Instagram profile page
+    const response = await fetch(`https://www.instagram.com/${cleanUsername}/`, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'DNT': '1',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1'
+      }
+    });
+    
+    if (response.ok) {
+      const html = await response.text();
+      
+      // Extract profile image URL from meta tags
+      const metaImageMatch = html.match(/<meta property="og:image" content="([^"]+)"/i);
+      if (metaImageMatch && metaImageMatch[1]) {
+        return metaImageMatch[1];
+      }
+      
+      // Extract from JSON-LD structured data
+      const jsonLdMatch = html.match(/<script type="application\/ld\+json">([^<]+)<\/script>/i);
+      if (jsonLdMatch) {
+        try {
+          const jsonData = JSON.parse(jsonLdMatch[1]);
+          if (jsonData.image) {
+            return jsonData.image;
+          }
+        } catch (e) {
+          console.log('Failed to parse JSON-LD data');
+        }
+      }
+      
+      // Extract from inline JavaScript (profile_pic_url pattern)
+      const profilePicMatch = html.match(/"profile_pic_url":"([^"]+)"/i);
+      if (profilePicMatch && profilePicMatch[1]) {
+        return profilePicMatch[1].replace(/\\u0026/g, '&');
+      }
+      
+      // Extract from any fbcdn.net URL pattern (like the one provided)
+      const fbcdnMatch = html.match(/(https:\/\/[^"\s]+\.fbcdn\.net[^"\s]+)/i);
+      if (fbcdnMatch && fbcdnMatch[1]) {
+        return fbcdnMatch[1];
+      }
+    }
+  } catch (error) {
+    console.log('Instagram scraping failed:', error);
+  }
+  
+  // Method 2: Try Instagram API endpoints as fallback
+  try {
     const response = await fetch(`https://www.instagram.com/api/v1/users/web_profile_info/?username=${cleanUsername}`, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'X-Requested-With': 'XMLHttpRequest'
       }
     });
     
     if (response.ok) {
       const data = await response.json();
+      if (data?.data?.user?.profile_pic_url_hd) {
+        return data.data.user.profile_pic_url_hd;
+      }
       if (data?.data?.user?.profile_pic_url) {
         return data.data.user.profile_pic_url;
       }
     }
   } catch (error) {
-    console.log('Instagram API method failed, using fallback');
-  }
-  
-  // Method 2: Try alternative Instagram endpoint
-  try {
-    const response = await fetch(`https://i.instagram.com/api/v1/users/web_profile_info/?username=${cleanUsername}`);
-    if (response.ok) {
-      const data = await response.json();
-      if (data?.data?.user?.profile_pic_url_hd) {
-        return data.data.user.profile_pic_url_hd;
-      }
-    }
-  } catch (error) {
-    console.log('Alternative Instagram method failed');
+    console.log('Instagram API method failed');
   }
   
   // Fallback: Use avatar generator with Instagram theme
@@ -142,9 +185,32 @@ export function getProfileImage(username: string, platform: string, fallbackName
 }
 
 /**
+ * Check if input is a direct profile image URL
+ */
+export function isDirectImageUrl(input: string): boolean {
+  const imageUrlPatterns = [
+    /fbcdn\.net.*\.(jpg|jpeg|png|webp)/i,
+    /cdninstagram\.com.*\.(jpg|jpeg|png|webp)/i,
+    /scontent.*\.(jpg|jpeg|png|webp)/i,
+    /profile.*pic.*\.(jpg|jpeg|png|webp)/i
+  ];
+  
+  return imageUrlPatterns.some(pattern => pattern.test(input));
+}
+
+/**
  * Process social media input and return structured data (async version)
  */
 export async function processSocialInputAsync(input: string, name: string): Promise<SocialProfile> {
+  // Check if input is a direct image URL
+  if (isDirectImageUrl(input)) {
+    return {
+      username: `@${name.toLowerCase().replace(/\s+/g, '')}`,
+      platform: 'Instagram', // Assume Instagram for fbcdn URLs
+      profileImageUrl: input
+    };
+  }
+  
   const username = extractUsername(input);
   const platform = detectPlatform(input);
   
@@ -172,6 +238,15 @@ export async function processSocialInputAsync(input: string, name: string): Prom
  * Process social media input and return structured data (synchronous version)
  */
 export function processSocialInput(input: string, name: string): SocialProfile {
+  // Check if input is a direct image URL
+  if (isDirectImageUrl(input)) {
+    return {
+      username: `@${name.toLowerCase().replace(/\s+/g, '')}`,
+      platform: 'Instagram', // Assume Instagram for fbcdn URLs
+      profileImageUrl: input
+    };
+  }
+  
   const username = extractUsername(input);
   const platform = detectPlatform(input);
   const profileImageUrl = getProfileImage(username, platform, name);

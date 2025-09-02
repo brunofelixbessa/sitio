@@ -13,8 +13,6 @@ interface Guest {
   socialLink: string;
   username: string;
   platform: string;
-  profileImageUrl?: string;
-  avatar: string;
   confirmed: boolean;
 }
 
@@ -34,9 +32,7 @@ export function ConfirmPresence({ onGuestAdded }: ConfirmPresenceProps) {
     return 'Social';
   };
 
-  const generateAvatar = (name: string): string => {
-    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`;
-  };
+
 
   const validateSocialLink = (url: string): boolean => {
     const socialPatterns = [
@@ -88,8 +84,6 @@ export function ConfirmPresence({ onGuestAdded }: ConfirmPresenceProps) {
         socialLink: socialLink.trim(),
         username: socialProfile.username,
         platform: socialProfile.platform,
-        profileImageUrl: socialProfile.profileImageUrl,
-        avatar: generateAvatar(name),
         confirmed: true
       };
       

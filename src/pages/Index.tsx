@@ -44,6 +44,13 @@ export default function Index() {
     });
   };
 
+  const handleGuestRemoved = (guestId: string) => {
+    setDynamicGuests(prev => {
+      const updatedGuests = prev.filter(guest => guest.id !== guestId);
+      return updatedGuests;
+    });
+  };
+
   // Show loading state while data is being loaded
   if (!isLoaded) {
     return (
@@ -71,7 +78,7 @@ export default function Index() {
       <ConfirmPresence onGuestAdded={handleGuestAdded} />
       
       {/* Guest Section */}
-      <GuestSection dynamicGuests={dynamicGuests} />
+      <GuestSection dynamicGuests={dynamicGuests} onGuestRemoved={handleGuestRemoved} />
       
       {/* Toast Notifications */}
       <Toaster position="top-right" richColors />

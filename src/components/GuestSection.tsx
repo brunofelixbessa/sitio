@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Instagram, Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Instagram, Users, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Guest {
   id: string;
@@ -9,16 +10,15 @@ interface Guest {
   socialLink: string;
   username: string;
   platform: string;
-  avatar: string;
-  profileImageUrl?: string;
   confirmed: boolean;
 }
 
 interface GuestSectionProps {
   dynamicGuests?: Guest[];
+  onGuestRemoved?: (guestId: string) => void;
 }
 
-export function GuestSection({ dynamicGuests = [] }: GuestSectionProps) {
+export function GuestSection({ dynamicGuests = [], onGuestRemoved }: GuestSectionProps) {
   // Usar apenas convidados dinâmicos (reais)
   const allGuests = dynamicGuests;
 
@@ -56,39 +56,24 @@ export function GuestSection({ dynamicGuests = [] }: GuestSectionProps) {
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
               {allGuests.map((guest) => (
-                <div key={guest.id} className="text-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
-                  <div 
-                    className="cursor-pointer" 
-                    onClick={() => {
-                      if (guest.socialLink) {
-                        // Se o link já é uma URL completa, use diretamente
-                        if (guest.socialLink.startsWith('http')) {
-                          window.open(guest.socialLink, '_blank');
-                        } else if (guest.socialLink.startsWith('@')) {
-                          // Se é um username, construa a URL baseada na plataforma
-                          const username = guest.socialLink.replace('@', '');
-                          let url = '';
-                          if (guest.platform === 'Instagram') {
-                            url = `https://instagram.com/${username}`;
-                          } else if (guest.platform === 'Facebook') {
-                            url = `https://facebook.com/${username}`;
-                          } else if (guest.platform === 'Twitter') {
-                            url = `https://twitter.com/${username}`;
-                          }
-                          if (url) window.open(url, '_blank');
-                        } else {
-                          // Fallback: tente construir URL do Instagram
-                          window.open(`https://instagram.com/${guest.socialLink}`, '_blank');
+                <div key={guest.id} className="text-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors relative">
+                  {onGuestRemoved && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="absolute top-2 right-2 w-6 h-6 p-0 text-red-400 hover:text-red-600 hover:bg-red-50 opacity-60 hover:opacity-100 transition-all"
+                      onClick={() => {
+                        if (window.confirm(`Tem certeza que deseja remover ${guest.name} da lista de convidados?`)) {
+                          onGuestRemoved(guest.id);
+                          toast.success(`${guest.name} foi removido da lista de convidados.`);
                         }
-                      }
-                    }}
-                  >
-                    <Avatar className="w-20 h-20 mx-auto mb-3 ring-2 ring-green-500 hover:ring-4 hover:ring-green-400 transition-all">
-                      <AvatarImage src={guest.profileImageUrl || guest.avatar} alt={guest.name} />
-                      <AvatarFallback className="bg-green-500 text-white text-lg">
-                        {guest.name.split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
+                      }}
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  )}
+                  <div className="w-20 h-20 mx-auto mb-3 bg-green-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                    {guest.name.split(' ').map(n => n[0]).join('')}
                   </div>
                   <h4 className="text-gray-800 font-semibold mb-1">{guest.name}</h4>
                   <div className="flex items-center justify-center space-x-1 text-sm text-green-600 cursor-pointer hover:text-green-800"
