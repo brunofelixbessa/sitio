@@ -117,9 +117,6 @@ export default function Index() {
       {/* Event Information */}
       <EventInfo />
       
-      {/* Confirm Presence Form */}
-      <ConfirmPresence onGuestAdded={handleGuestAdded} />
-      
       {/* Guest Section */}
       <GuestSection 
         dynamicGuests={dynamicGuests} 
@@ -127,6 +124,9 @@ export default function Index() {
         onGuestsImported={handleGuestsImported}
         onReloadGuests={reloadGuestsFromBaserow}
       />
+      
+      {/* Confirm Presence Form */}
+      <ConfirmPresence onGuestAdded={handleGuestAdded} />
       
       {/* Toast Notifications */}
       <Toaster position="top-right" richColors />
