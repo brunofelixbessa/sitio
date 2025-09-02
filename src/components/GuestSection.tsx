@@ -21,11 +21,11 @@ interface GuestSectionProps {
   dynamicGuests?: Guest[];
   onGuestRemoved?: (guestId: string) => void;
   onGuestsImported?: (guests: Guest[]) => void;
+  onReloadGuests?: () => Promise<void>;
   useBaserow?: boolean;
 }
 
-export function GuestSection({ dynamicGuests = [], onGuestRemoved, onGuestsImported, useBaserow = true }: GuestSectionProps) {
-  const [baserowGuests, setBaserowGuests] = useState<Guest[]>([]);
+export function GuestSection({ dynamicGuests = [], onGuestRemoved, onGuestsImported, onReloadGuests, useBaserow = true }: GuestSectionProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [baserowEnabled, setBaserowEnabled] = useState(false);
   
@@ -34,41 +34,6 @@ export function GuestSection({ dynamicGuests = [], onGuestRemoved, onGuestsImpor
     setBaserowEnabled(isBaserowConfigured() && useBaserow);
   }, [useBaserow]);
   
-  // Carregar convidados do Baserow
-  const loadBaserowGuests = async () => {
-    if (!baserowEnabled) return;
-    
-    setIsLoading(true);
-    try {
-      const guests = await fetchAllGuests();
-      // Converter para o formato Guest com IDs
-      const guestsWithIds = guests.map(guest => ({
-        ...guest,
-        id: guest.name, // Usar o nome como ID para simplificar
-        username: guest.socialLink.startsWith('@') ? guest.socialLink.substring(1) : guest.socialLink,
-        confirmed: true
-      }));
-      setBaserowGuests(guestsWithIds);
-      
-      // Se onGuestsImported estiver disponível, atualizar também o estado local
-      if (onGuestsImported) {
-        onGuestsImported(guestsWithIds);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar convidados do Baserow:', error);
-      toast.error('Não foi possível carregar a lista de convidados do servidor.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  // Carregar convidados do Baserow ao montar o componente
-  useEffect(() => {
-    if (baserowEnabled) {
-      loadBaserowGuests();
-    }
-  }, [baserowEnabled]);
-  
   // Função para remover convidado do Baserow
   const handleRemoveFromBaserow = async (guestName: string, guestId: string) => {
     if (!baserowEnabled) return false;
@@ -76,8 +41,6 @@ export function GuestSection({ dynamicGuests = [], onGuestRemoved, onGuestsImpor
     try {
       const success = await removeGuestFromBaserow(guestName);
       if (success) {
-        // Atualizar estado local
-        setBaserowGuests(prev => prev.filter(g => g.name !== guestName));
         // Chamar callback se disponível
         if (onGuestRemoved) {
           onGuestRemoved(guestId);
@@ -91,8 +54,8 @@ export function GuestSection({ dynamicGuests = [], onGuestRemoved, onGuestsImpor
     }
   };
   
-  // Usar convidados do Baserow se disponíveis, caso contrário usar convidados locais
-  const allGuests = baserowEnabled ? baserowGuests : dynamicGuests;
+  // Usar apenas os convidados passados via props
+  const allGuests = dynamicGuests;
 
   return (
     <section className="py-20 bg-gradient-to-b from-purple-50 to-pink-50">
@@ -126,11 +89,15 @@ export function GuestSection({ dynamicGuests = [], onGuestRemoved, onGuestsImpor
                 <span>Confirmados ✅</span>
               </CardTitle>
               
-              {baserowEnabled && (
+              {baserowEnabled && onReloadGuests && (
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={loadBaserowGuests}
+                  onClick={async () => {
+                    setIsLoading(true);
+                    await onReloadGuests();
+                    setIsLoading(false);
+                  }}
                   disabled={isLoading}
                   className="flex items-center space-x-1"
                 >
@@ -215,15 +182,7 @@ export function GuestSection({ dynamicGuests = [], onGuestRemoved, onGuestsImpor
           />
         )}
         
-        {/* Mensagem informativa sobre Baserow */}
-        {baserowEnabled && (
-          <div className="text-center mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <p className="text-blue-700">
-              A lista de convidados está sendo compartilhada automaticamente através do Baserow.
-              Não é necessário importar ou exportar manualmente.
-            </p>
-          </div>
-        )}
+
 
       </div>
     </section>

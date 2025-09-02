@@ -17,8 +17,8 @@ export function EventBanner() {
       {/* Background Image */}
       <div className="absolute inset-0 opacity-30">
         <img 
-          src="/assets/WhatsApp Image 2025-09-01 at 23.19.01 (2).jpeg" 
-          alt="Vista do sítio" 
+          src="https://c.files.bbci.co.uk/11DE7/production/_104019137_gettyimages-844232562.jpg" 
+          alt="Halloween theme background" 
           className="w-full h-full object-cover"
         />
       </div>
@@ -81,7 +81,7 @@ export function EventBanner() {
               }}
               className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-8 py-4 rounded-full text-xl font-bold shadow-2xl transform hover:scale-105 transition-all duration-300 hover:shadow-3xl cursor-pointer"
             >
-              Vamos Celebrar Juntos! 🎃
+              Confirmar Presença
             </button>
           </div>
         </div>

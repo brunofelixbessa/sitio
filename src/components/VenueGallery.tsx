@@ -63,32 +63,7 @@ export function VenueGallery() {
           ))}
         </div>
 
-        <div className="mt-12 text-center">
-          <Card className="bg-gradient-to-r from-green-100 to-blue-100 border-green-200">
-            <CardContent className="p-8">
-              <h3 className="text-2xl font-bold text-gray-800 mb-4">
-                🌟 Por que você vai amar este lugar?
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-gray-700">
-                <div>
-                  <div className="text-3xl mb-2">🏔️</div>
-                  <h4 className="font-bold mb-2">Vista Incrível</h4>
-                  <p className="text-sm">Paisagem montanhosa de tirar o fôlego</p>
-                </div>
-                <div>
-                  <div className="text-3xl mb-2">🏊‍♂️</div>
-                  <h4 className="font-bold mb-2">Piscina Aquecida</h4>
-                  <p className="text-sm">Diversão garantida mesmo no friozinho</p>
-                </div>
-                <div>
-                  <div className="text-3xl mb-2">🌿</div>
-                  <h4 className="font-bold mb-2">Natureza Pura</h4>
-                  <p className="text-sm">Ar puro e muito verde ao redor</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+
       </div>
     </section>
   );
