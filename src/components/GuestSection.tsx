@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { useEffect, useState } from 'react';
 import { fetchAllGuests, removeGuestFromBaserow } from '@/services/baserowGuestService';
 import { isBaserowConfigured } from '@/lib/baserow';
-import { ShareGuestList } from './ShareGuestList';
+
 
 interface Guest {
   id: string;
@@ -59,7 +59,7 @@ export function GuestSection({ dynamicGuests = [], onGuestRemoved, onGuestsImpor
   const allGuests = dynamicGuests;
 
   return (
-    <section className="py-20 bg-gradient-to-b from-purple-50 to-pink-50">
+    <section className="py-2 bg-gradient-to-b from-purple-50 to-pink-50">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-6">
@@ -187,13 +187,7 @@ export function GuestSection({ dynamicGuests = [], onGuestRemoved, onGuestsImpor
 
 
 
-        {/* Mostrar ShareGuestList apenas se Baserow não estiver configurado */}
-        {!baserowEnabled && (
-          <ShareGuestList 
-            guests={allGuests} 
-            onGuestsImported={onGuestsImported || (() => {})} 
-          />
-        )}
+
         
 
 

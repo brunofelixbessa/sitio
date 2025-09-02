@@ -183,7 +183,7 @@ export function EventInfo() {
         </div>
 
         {/* Payment Section */}
-        <div className="mt-16">
+        <div className="mt-5">
           <Card className="bg-gradient-to-r from-green-100 to-blue-100 border-green-200">
             <CardHeader>
               <CardTitle className="text-3xl text-center bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">

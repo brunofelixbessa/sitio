@@ -130,7 +130,7 @@ export function ConfirmPresence({ onGuestAdded }: ConfirmPresenceProps) {
   };
 
   return (
-    <section data-section="confirm-presence" className="py-16 bg-gradient-to-br from-orange-50 to-red-50">
+    <section data-section="confirm-presence" className="py-10 bg-gradient-to-br from-orange-50 to-red-50">
       <div className="container mx-auto px-6">
         <Card className="max-w-md mx-auto bg-white/90 backdrop-blur-sm border-orange-200 shadow-xl">
           <CardHeader className="text-center">
