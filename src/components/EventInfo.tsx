@@ -126,7 +126,7 @@ export function EventInfo() {
         </div>
 
         {/* Important Rules */}
-        <div className="mt-16">
+        <div className="mt-16 space-y-6">
           <Card className="bg-gradient-to-r from-red-100 to-orange-100 border-red-200">
             <CardContent className="p-8 text-center">
               <h3 className="text-2xl font-bold text-red-700 mb-4">
@@ -138,6 +138,46 @@ export function EventInfo() {
               <p className="text-red-600">
                 O convite é pessoal. Quer chamar alguém? Fale comigo antes!
               </p>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-gradient-to-r from-green-100 to-blue-100 border-green-200">
+            <CardContent className="p-8 text-center">
+              <h3 className="text-2xl font-bold text-green-700 mb-4">
+                🌞 Visita Apenas no Dia
+              </h3>
+              <p className="text-lg text-green-600 mb-2">
+                <strong>Quer passar apenas o dia no sítio?</strong>
+              </p>
+              <p className="text-green-600">
+                Basta ir e levar sua bebida - não precisa pagar! 🍻
+              </p>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-gradient-to-r from-blue-100 to-purple-100 border-blue-200">
+            <CardContent className="p-8 text-center">
+              <h3 className="text-2xl font-bold text-blue-700 mb-4">
+                🚗 Como Chegar ao Sítio
+              </h3>
+              <div className="space-y-4">
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <p className="text-lg text-blue-600 mb-2">
+                    <strong>Tem carro? 🚙</strong>
+                  </p>
+                  <p className="text-blue-600">
+                    Ofereça uma vaga de carona se puder! Vamos juntos! 🤝
+                  </p>
+                </div>
+                <div className="bg-purple-50 p-4 rounded-lg">
+                  <p className="text-lg text-purple-600 mb-2">
+                    <strong>Precisa de carona? 🙋‍♂️</strong>
+                  </p>
+                  <p className="text-purple-600">
+                    Me avise que vou encontrar uma carona pra você! 📱
+                  </p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
